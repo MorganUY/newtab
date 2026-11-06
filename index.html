@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --yellow:#fcee0a; --cyan:#00f0ff; --red:#ff003c;
+  --bg:#07070a; --panel:#101014; --dim:#8a8670; --text:#f3efc4;
+  --mono:'Share Tech Mono','Consolas','Courier New',monospace;
+  --head:'Rajdhani','Bahnschrift','Arial Narrow',sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{font-size:clamp(15px,.62vw + 7px,26px)}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;padding:1.1rem}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
+
+.desk{
+  min-height:calc(100vh - 2.2rem);display:grid;gap:1.1rem;
+  grid-template-columns:1.5fr 1fr 1fr;
+  grid-template-rows:auto auto minmax(17rem,1fr);
+  grid-template-areas:"main main prog" "main main timer" "code net notes";
+}
+.win{
+  background:var(--panel);border:1px solid var(--yellow);min-width:0;min-height:0;
+  clip-path:polygon(0 0,calc(100% - 1.2rem) 0,100% 1.2rem,100% 100%,1.2rem 100%,0 calc(100% - 1.2rem));
+  display:flex;flex-direction:column;
+}
+.bar{display:flex;justify-content:space-between;background:var(--yellow);color:#000;
+  font:700 .85rem var(--head);letter-spacing:.14em;padding:.3rem 1.8rem .3rem .9rem}
+.in{padding:1.1rem 1.3rem 1.3rem;flex:1;min-height:0;position:relative}
+.w-main{grid-area:main}.w-prog{grid-area:prog}.w-timer{grid-area:timer}
+.w-code{grid-area:code}.w-net{grid-area:net}.w-notes{grid-area:notes}
+
+.w-main .in{display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem}
+#clock{font:700 clamp(3.4rem,6vw,8rem)/1 var(--head);color:var(--yellow);letter-spacing:.04em;
+  text-shadow:2px 0 var(--red),-2px 0 var(--cyan);animation:glitch 7s infinite steps(1)}
+@keyframes glitch{
+  0%,92%,100%{transform:none;text-shadow:2px 0 var(--red),-2px 0 var(--cyan)}
+  93%{transform:translate(-4px,1px);text-shadow:-6px 0 var(--red),6px 0 var(--cyan)}
+  95%{transform:translate(3px,-1px);text-shadow:5px 0 var(--red),-5px 0 var(--cyan)}
+  97%{transform:none}
+}
+#date{color:var(--cyan);font-size:1.15rem;margin:.6rem 0 .25rem}
+#greet{color:var(--dim);font-size:.95rem}
+.cursor{display:inline-block;width:.6em;height:1.1em;background:var(--yellow);vertical-align:-3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.term{display:flex;align-items:center;gap:.75rem;border:1px solid var(--dim);border-left:4px solid var(--yellow);background:#0a0a0d;padding:.85rem 1rem;font-size:1.15rem}
+.term:focus-within{border-color:var(--yellow);box-shadow:0 0 18px rgba(252,238,10,.25)}
+.prompt{color:var(--yellow);white-space:nowrap}.prompt b{color:var(--cyan);font-weight:400}
+#q{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font:inherit;caret-color:var(--yellow)}
+.hint{color:var(--dim);font-size:.85rem;margin-top:.7rem;line-height:1.5}.hint span{color:var(--cyan)}
+
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem}
+.tile{display:block;text-decoration:none;color:var(--text);border:1px solid var(--dim);padding:.85rem 1rem 1rem;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - .85rem),calc(100% - .85rem) 100%,0 100%);
+  transition:background .15s,color .15s,border-color .15s}
+.tile small{color:var(--dim);font-size:.8rem;display:block}
+.tile strong{font:700 1.6rem var(--head);letter-spacing:.08em;display:block;margin-top:.35rem}
+.tile:hover,.tile:focus-visible{background:var(--yellow);color:#000;border-color:var(--yellow);outline:0}
+.tile:hover small,.tile:focus-visible small{color:#000}
+.tile.claude strong{color:var(--cyan)}
+.tile.claude:hover strong,.tile.claude:focus-visible strong{color:#000}
+
+.row{display:flex;justify-content:space-between;font-size:.85rem;color:var(--dim);margin-top:.6rem}
+.row:first-child{margin-top:0}.row b{color:var(--cyan);font-weight:400}
+.track{height:.5rem;background:#1b1b1f;margin-top:.25rem}
+.track i{display:block;height:100%;width:0;background:var(--yellow)}
+.w-timer .in{display:flex;flex-direction:column;justify-content:space-between}
+#pt{font:700 3.6rem/1.1 var(--head);color:var(--text);letter-spacing:.06em}
+.btns{display:flex;gap:.5rem}
+.btn{flex:1;background:none;color:var(--yellow);border:1px solid var(--yellow);font:700 .9rem var(--head);letter-spacing:.1em;padding:.4rem 0;cursor:pointer}
+.btn:hover,.btn:focus-visible{background:var(--yellow);color:#000;outline:0}
+
+.w-code .in{padding:0}
+#code{position:absolute;inset:1.1rem 1.3rem 1.3rem;overflow:hidden;font-size:.85rem;line-height:1.55;white-space:pre-wrap;color:var(--text)}
+#code .k{color:var(--yellow);font-style:normal}#code .s{color:var(--cyan);font-style:normal}
+#code .c{color:var(--dim);font-style:normal}#code .o{color:var(--red);font-style:normal}
+.w-net .in{padding:0}
+#net{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.netlbl{position:absolute;left:.9rem;bottom:.6rem;font-size:.75rem;color:var(--dim);pointer-events:none}
+.w-notes .in{display:flex}
+#notes{width:100%;height:100%;resize:none;background:#0a0a0d;color:var(--text);border:1px solid #2a2a2f;font:.9rem/1.5 var(--mono);padding:.6rem;outline:0;caret-color:var(--yellow)}
+#notes:focus{border-color:var(--yellow)}
+
+@media (max-width:1000px){
+  .desk{grid-template-columns:1fr;grid-template-rows:none;grid-template-areas:"main" "prog" "timer" "code" "net" "notes"}
+  .w-code,.w-net,.w-notes{min-height:15rem}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+}
+@media (prefers-reduced-motion:reduce){#clock,.cursor{animation:none}}
+</style>
+</head>
+<body>
+<main class="desk">
+
+  <section class="win w-main">
+    <div class="bar"><span>NIGHT_CITY // TERMINAL</span><span>СЕТЬ: ONLINE</span></div>
+    <div class="in">
+      <div>
+        <div id="clock">00:00:00</div>
+        <div id="date"></div>
+        <div id="greet"></div>
+      </div>
+      <div>
+        <label class="term">
+          <span class="prompt">morgan@<b>nightcity</b>:~$</span>
+          <input id="q" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Поиск">
+        </label>
+        <p class="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>1–4</span> открывают узлы, когда поле пустое.</p>
+      </div>
+      <nav class="tiles">
+        <a class="tile" href="https://www.youtube.com" data-k="1"><small>[1] ./video</small><strong>YOUTUBE</strong></a>
+        <a class="tile" href="https://github.com" data-k="2"><small>[2] ./code</small><strong>GITHUB</strong></a>
+        <a class="tile" href="https://store.steampowered.com" data-k="3"><small>[3] ./games</small><strong>STEAM</strong></a>
+        <a class="tile claude" href="https://claude.ai" data-k="4"><small>[4] ./netrunner</small><strong>CLAUDE</strong></a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="win w-prog">
+    <div class="bar"><span>ПРОГРЕСС</span><span>.sys</span></div>
+    <div class="in">
+      <div class="row"><span>день</span><b id="p-d"></b></div><div class="track"><i id="b-d"></i></div>
+      <div class="row"><span>неделя</span><b id="p-w"></b></div><div class="track"><i id="b-w"></i></div>
+      <div class="row"><span>месяц</span><b id="p-m"></b></div><div class="track"><i id="b-m"></i></div>
+      <div class="row"><span>год</span><b id="p-y"></b></div><div class="track"><i id="b-y"></i></div>
+    </div>
+  </section>
+
+  <section class="win w-timer">
+    <div class="bar"><span>ТАЙМЕР ФОКУСА</span><span>.exe</span></div>
+    <div class="in">
+      <div id="pt">25:00</div>
+      <div class="btns">
+        <button class="btn" id="pgo">СТАРТ</button>
+        <button class="btn" data-m="25">25</button>
+        <button class="btn" data-m="5">5</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="win w-code">
+    <div class="bar"><span>BREACH.JS</span><span>RUNNING</span></div>
+    <div class="in"><div id="code"></div></div>
+  </section>
+
+  <section class="win w-net">
+    <div class="bar"><span>NET // TRACE</span><span>наведи курсор</span></div>
+    <div class="in"><canvas id="net"></canvas><div class="netlbl" id="netlbl"></div></div>
+  </section>
+
+  <section class="win w-notes">
+    <div class="bar"><span>ЗАМЕТКИ</span><span>.txt</span></div>
+    <div class="in"><textarea id="notes" spellcheck="false" placeholder="сюда можно писать что угодно..."></textarea></div>
+  </section>
+
+</main>
+
+<script>
+const NAME = "Morgan";
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+function tick(){
+  const d = new Date(), h = d.getHours();
+  $("#clock").textContent = pad(h) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  $("#date").textContent = days[d.getDay()] + ", " + d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+  const g = h < 6 ? "Доброй ночи" : h < 12 ? "Доброе утро" : h < 18 ? "Добрый день" : "Добрый вечер";
+  $("#greet").innerHTML = g + ", " + NAME + ". Подключение установлено<span class='cursor'></span>";
+}
+tick(); setInterval(tick, 1000);
+
+const engines = {
+  yt:    ["https://www.youtube.com/results?search_query=", "https://www.youtube.com"],
+  gh:    ["https://github.com/search?q=", "https://github.com"],
+  steam: ["https://store.steampowered.com/search/?term=", "https://store.steampowered.com"],
+  ai:    ["https://claude.ai/new?q=", "https://claude.ai"],
+};
+const DDG = "https://duckduckgo.com/?q=";
+const go = url => { location.href = url; };
+
+$("#q").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const v = e.target.value.trim();
+  if (!v) return;
+  const [first, ...rest] = v.split(/\s+/);
+  const eng = engines[first.toLowerCase()];
+  if (eng) return go(rest.length ? eng[0] + encodeURIComponent(rest.join(" ")) : eng[1]);
+  if (/^https?:\/\//i.test(v) || /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v))
+    return go(/^https?:/i.test(v) ? v : "https://" + v);
+  go(DDG + encodeURIComponent(v));
+});
+document.addEventListener("keydown", e => {
+  if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = document.querySelector('.tile[data-k="' + e.key + '"]');
+  if (t) t.click(); else if (e.key.length === 1) $("#q").focus();
+});
+$("#q").focus();
+
+function bar(id, f){ const v = Math.max(0, Math.min(1, f)); $("#b-"+id).style.width = (v*100)+"%"; $("#p-"+id).textContent = Math.floor(v*100)+"%"; }
+function progress(){
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+  const d0 = new Date(y, m, n.getDate()), dow = (n.getDay()+6)%7, fd = (n - d0)/864e5;
+  bar("d", fd); bar("w", (dow + fd)/7);
+  bar("m", (n.getDate()-1 + fd)/new Date(y, m+1, 0).getDate());
+  bar("y", (n - new Date(y,0,1))/(new Date(y+1,0,1) - new Date(y,0,1)));
+}
+progress(); setInterval(progress, 1000);
+
+let left = 25*60, end = 0, timer = null;
+const showT = () => $("#pt").textContent = pad(Math.floor(left/60)) + ":" + pad(left%60);
+function stopT(){ clearInterval(timer); timer = null; $("#pgo").textContent = "СТАРТ"; }
+function beep(){ try{ const c = new AudioContext(), o = c.createOscillator(); o.frequency.value = 880; o.connect(c.destination); o.start(); setTimeout(()=>{o.stop();c.close()}, 450); }catch(e){} }
+$("#pgo").onclick = () => {
+  if(timer) return stopT();
+  if(left <= 0) left = 25*60;
+  end = Date.now() + left*1000; $("#pgo").textContent = "ПАУЗА";
+  timer = setInterval(() => {
+    left = Math.max(0, Math.round((end - Date.now())/1000)); showT();
+    if(left === 0){ stopT(); beep(); document.title = "Время! // Night City"; }
+  }, 250);
+};
+document.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { stopT(); left = b.dataset.m*60; showT(); document.title = "Night City"; });
+
+try{ $("#notes").value = localStorage.getItem("nc-notes") || ""; }catch(e){}
+$("#notes").addEventListener("input", e => { try{ localStorage.setItem("nc-notes", e.target.value); }catch(err){} });
+
+// ---- печатающийся код ----
+const SNIPS = [
+`// scan subnet
+const nodes = scan("10.77.0.0/16");
+for (const n of nodes) {
+  if (n.ice) mark(n, "HOSTILE");
+}
+> найдено узлов: 128`,
+`// quickhack: overheat
+function overheat(target) {
+  const heat = target.cpu * 2;
+  inject("overheat.exe", heat);
+  return target.status;
+}
+> цель перегрета`,
+`// decrypt data shard
+const key = bruteforce(shard, "MAELSTROM");
+const data = decrypt(shard, key);
+> shard расшифрован: 4.2 МБ`,
+`// ping braindance server
+const ping = await net.ping("afterlife.club");
+if (ping > 100) reroute("relay-7");
+> задержка: 23 мс`,
+`// wipe traces
+function wipe(log) {
+  for (const line of log) erase(line);
+  return "CLEAN";
+}
+> следы удалены`,
+`// breach protocol v2.77
+const target = "arasaka.net";
+const ice = scan(target);
+if (ice.level > 3) return "ABORT";
+inject("quickhack.exe");
+> доступ получен`
+];
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const hl = s => esc(s)
+  .replace(/^(>.*)$/gm, "<i class='o'>$1</i>")
+  .replace(/(\/\/.*)/g, "<i class='c'>$1</i>")
+  .replace(/("[^"]*")/g, "<i class='s'>$1</i>")
+  .replace(/\b(const|function|if|return|for|of|await)\b/g, "<i class='k'>$1</i>");
+const codeEl = $("#code");
+let buf = "", cur = "", pos = 0, last = -1;
+function nextSnip(){
+  let i; do { i = Math.floor(Math.random()*SNIPS.length); } while (i === last);
+  last = i; cur = SNIPS[i] + "\n\n"; pos = 0;
+}
+function typeCode(){
+  if (pos >= cur.length) nextSnip();
+  const ch = cur[pos++]; buf += ch;
+  if (ch === "\n"){ const l = buf.split("\n"); if (l.length > 40) buf = l.slice(-40).join("\n"); }
+  codeEl.innerHTML = hl(buf) + "<span class='cursor'></span>";
+  codeEl.scrollTop = codeEl.scrollHeight;
+  setTimeout(typeCode, ch === "\n" ? 220 : 30 + Math.random()*40);
+}
+if (reduce) codeEl.innerHTML = hl(SNIPS[0]); else typeCode();
+
+// ---- интерактивная сеть ----
+const cv = $("#net"), cx = cv.getContext("2d");
+let W = 0, H = 0, nodes = [];
+const mouse = {x:-999, y:-999};
+function fit(){
+  const r = cv.parentElement.getBoundingClientRect();
+  W = cv.width = Math.max(1, r.width); H = cv.height = Math.max(1, r.height);
+  nodes = Array.from({length: Math.round(W*H/8000)}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    vx: reduce ? 0 : (Math.random()-.5)*.6, vy: reduce ? 0 : (Math.random()-.5)*.6 }));
+}
+new ResizeObserver(fit).observe(cv.parentElement);
+cv.addEventListener("mousemove", e => { const r = cv.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
+cv.addEventListener("mouseleave", () => { mouse.x = mouse.y = -999; });
+function draw(){
+  cx.clearRect(0, 0, W, H);
+  let links = 0;
+  for (const n of nodes){
+    n.x += n.vx; n.y += n.vy;
+    const dx = n.x - mouse.x, dy = n.y - mouse.y, d = Math.hypot(dx, dy);
+    if (d < 90 && d > 0){ n.x += dx/d*1.6; n.y += dy/d*1.6; }
+    if (n.x < 0){ n.x = 0; n.vx = Math.abs(n.vx); } else if (n.x > W){ n.x = W; n.vx = -Math.abs(n.vx); }
+    if (n.y < 0){ n.y = 0; n.vy = Math.abs(n.vy); } else if (n.y > H){ n.y = H; n.vy = -Math.abs(n.vy); }
+  }
+  for (let i = 0; i < nodes.length; i++){
+    const a = nodes[i];
+    for (let j = i+1; j < nodes.length; j++){
+      const b = nodes[j], d = Math.hypot(a.x-b.x, a.y-b.y);
+      if (d < 100){ cx.strokeStyle = "rgba(252,238,10," + (1-d/100)*.55 + ")"; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke(); links++; }
+    }
+    const dm = Math.hypot(a.x-mouse.x, a.y-mouse.y);
+    if (dm < 150){ cx.strokeStyle = "rgba(0,240,255," + (1-dm/150) + ")"; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(mouse.x,mouse.y); cx.stroke(); }
+    cx.fillStyle = "#fcee0a"; cx.fillRect(a.x-1.5, a.y-1.5, 3, 3);
+  }
+  $("#netlbl").textContent = "узлов: " + nodes.length + "  связей: " + links;
+  if (!reduce) requestAnimationFrame(draw);
+}
+fit(); draw();
+</script>
+</body>
+</html>
