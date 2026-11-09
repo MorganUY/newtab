@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Night City</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;700&family=Chakra+Petch:wght@500;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
 <style>
 :root{
   --yellow:#fcee0a; --cyan:#00f0ff; --red:#ff003c;
-  --bg:#07070a; --panel:#101014; --dim:#8a8670; --text:#f3efc4;
+  --bg:#07070a; --panel:rgba(14,14,18,.86); --dim:#8a8670; --text:#f3efc4;
   --mono:'Share Tech Mono','Consolas','Courier New',monospace;
   --head:'Rajdhani','Bahnschrift','Arial Narrow',sans-serif;
 }
@@ -85,7 +85,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 
 .w-rain .in,.w-log .in{padding:0}
 #rain{position:absolute;inset:0;width:100%;height:100%}
-#log{position:absolute;inset:.8rem 1.1rem;overflow:hidden;font-size:.78rem;line-height:1.5;color:var(--dim)}
+#log{position:absolute;inset:.8rem 1.1rem 3rem;overflow:hidden;font-size:.78rem;line-height:1.5;color:var(--dim)}
 #log b{color:var(--cyan);font-weight:400}#log em{color:var(--red);font-style:normal}
 #theme,#snd{background:none;border:1px solid #000;color:#000;font:inherit;letter-spacing:inherit;padding:0 .5rem;margin-left:.7rem;cursor:pointer}
 #theme:hover,#snd:hover{background:#000;color:var(--yellow)}
@@ -93,6 +93,16 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #boot{position:fixed;inset:0;z-index:100;background:var(--bg);padding:2.2rem;font-size:1.05rem;line-height:1.8;color:var(--yellow);transition:opacity .45s;cursor:pointer}
 #boot.out{opacity:0;pointer-events:none}
 #boot i{font-style:normal;color:var(--cyan)}#boot b{font-weight:400;color:var(--red)}
+#bgc{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.st2 .bar{background:transparent;color:var(--yellow);border-bottom:1px solid var(--yellow)}
+.st3 .win{clip-path:none;border-radius:.7rem;overflow:hidden;border-color:color-mix(in srgb,var(--yellow) 50%,transparent)}
+.st3 .bar{background:color-mix(in srgb,var(--yellow) 18%,transparent);color:var(--yellow)}
+.st2 #theme,.st2 #snd,.st3 #theme,.st3 #snd{border-color:var(--yellow);color:var(--yellow)}
+.st2 #theme:hover,.st2 #snd:hover,.st3 #theme:hover,.st3 #snd:hover{background:var(--yellow);color:#000}
+.cmd{position:absolute;left:1.1rem;right:1.1rem;bottom:.6rem;display:flex;gap:.5rem;align-items:center;border-top:1px solid #2a2a2f;padding-top:.45rem;font-size:.85rem}
+.cmd span{color:var(--yellow)}
+#cmd{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font:inherit;caret-color:var(--yellow)}
+#sug{color:var(--dim);font-size:.75rem;white-space:nowrap}
 .tile{position:relative}
 .edit .tile{border-color:var(--red)}
 .edit .tile::after{content:"✕";position:absolute;top:.3rem;right:.7rem;color:var(--red)}
@@ -130,6 +140,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 </style>
 </head>
 <body>
+<canvas id="bgc"></canvas>
 <div id="boot" style="display:none"></div>
 <main class="desk split v">
   <div class="split h" data-id="top" data-f="1.3">
@@ -146,7 +157,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
           <span class="prompt">morgan@<b>nightcity</b>:~$</span>
           <input id="q" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Поиск">
         </label>
-        <p class="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>цифры</span> открывают узлы, когда поле пустое. Команды: <span>help</span>.</p>
+        <p class="hint" id="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>цифры</span> открывают узлы, когда поле пустое. Команды — в окне SYSLOG, клавиша <span>/</span>.</p>
       </div>
       <div>
         <nav class="tiles" id="tiles"></nav>
@@ -166,8 +177,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
     </div>
   </section>
 <section class="win w-log" data-id="log" data-f=".55">
-    <div class="bar"><span>SYSLOG</span><span>live</span></div>
-    <div class="in"><div id="log"></div></div>
+    <div class="bar"><span>SYSLOG // КОМАНДЫ</span><span>клавиша /</span></div>
+    <div class="in"><div id="log"></div><div class="cmd"><span>&gt;</span><input id="cmd" placeholder="help" spellcheck="false" autocomplete="off"><div id="sug"></div></div></div>
   </section>
     </div>
   </div>
@@ -263,7 +274,7 @@ setSnd(snd);
 document.addEventListener("mouseover", e => { const t = e.target.closest(".tile,.gutter,#theme,#snd"); if (t && !t.contains(e.relatedTarget)) blip(1400, .02, .02); });
 document.addEventListener("click", e => { if (e.target.closest(".tile")) blip(500, .08, .04); });
 $("#q").addEventListener("input", () => blip(700 + Math.random()*200, .015, .015));
-["#tdin","#ln","#lu"].forEach(id => $(id).addEventListener("input", () => blip(700 + Math.random()*200, .015, .015)));
+["#tdin","#ln","#lu","#cmd"].forEach(id => $(id).addEventListener("input", () => blip(700 + Math.random()*200, .015, .015)));
 $("#q").addEventListener("keydown", e => { if (e.key === "Enter") blip(1100, .06, .04); });
 
 const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
@@ -292,7 +303,6 @@ $("#q").addEventListener("keydown", e => {
   if (e.key !== "Enter") return;
   const v = e.target.value.trim();
   if (!v) return;
-  if (runCmd(v)){ e.target.value = ""; return; }
   const [first, ...rest] = v.split(/\s+/);
   const eng = engines[first.toLowerCase()];
   if (eng) return go(rest.length ? eng[0] + encodeURIComponent(rest.join(" ")) : eng[1]);
@@ -302,6 +312,7 @@ $("#q").addEventListener("keydown", e => {
 });
 document.addEventListener("keydown", e => {
   if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "/"){ e.preventDefault(); $("#cmd").focus(); return; }
   const t = document.querySelector('.tile[data-k="' + e.key + '"]');
   if (t) { if (!editMode) t.click(); } else if (e.key.length === 1) $("#q").focus();
 });
@@ -367,7 +378,25 @@ function boost(t) {
 `// drain eddies
 const acc = trace("kiroshi.bank");
 if (acc.ice === 0) transfer(acc, "me");
-> перевод невозможен`
+> перевод невозможен`,
+`// cloak signal
+const sig = mask(me.id, "ghost");
+net.route(sig, ["relay-3", "relay-9"]);
+> сигнал замаскирован`,
+`// override camera feed
+const cam = find("camera", "sector-7");
+cam.loop(frames.last(30));
+> камера зациклена`,
+`// brain scan
+const mind = scan(npc.head);
+if (mind.cyberpsycho) alert("RUN");
+> уровень угрозы: высокий`,
+`// hijack drone
+function hijack(d) {
+  d.owner = "morgan";
+  return d.arm("rail");
+}
+> дрон под контролем`
 ];
 const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const hl = s => esc(s)
@@ -454,6 +483,32 @@ function rainTick(){
 }
 rfit(); if (!reduce) setInterval(rainTick, 70);
 
+// ---- фон, шрифты, стили окон ----
+const bc = $("#bgc"), bx = bc.getContext("2d");
+let bm = 1, bw = 0, bh = 0, bt = 0, ps = [];
+try{ const v = localStorage.getItem("nc-bg"); if (v !== null) bm = +v; }catch(e){}
+const setBg = v => { bm = v; try{ localStorage.setItem("nc-bg", v); }catch(e){} };
+function bfit(){ bw = bc.width = innerWidth; bh = bc.height = innerHeight; ps = Array.from({length: 70}, () => ({x: Math.random()*bw, y: Math.random()*bh, s: Math.random()*1.5 + .5})); }
+addEventListener("resize", bfit); bfit();
+function bgTick(){
+  if (document.hidden) return;
+  bx.clearRect(0, 0, bw, bh);
+  if (eco || !bm) return;
+  bt++; bx.strokeStyle = "rgba(" + ACC + ",.22)"; bx.fillStyle = "rgba(" + ACC + ",.6)";
+  if (bm === 1){ ps.forEach(p => { p.y -= p.s*.6; if (p.y < 0){ p.y = bh; p.x = Math.random()*bw; } bx.fillRect(p.x, p.y, p.s, p.s*3); }); return; }
+  const hy = bh*.4;
+  for (let i = 0; i < 14; i++){ const k = ((i + bt/40) % 14)/14, y = hy + (bh - hy)*k*k; bx.beginPath(); bx.moveTo(0, y); bx.lineTo(bw, y); bx.stroke(); }
+  for (let i = -14; i <= 14; i++){ bx.beginPath(); bx.moveTo(bw/2 + i*bw*.02, hy); bx.lineTo(bw/2 + i*bw*.14, bh); bx.stroke(); }
+}
+setInterval(bgTick, 50);
+const FONTS = [["'Rajdhani','Bahnschrift','Arial Narrow',sans-serif","'Share Tech Mono','Consolas','Courier New',monospace"],
+  ["'Orbitron','Bahnschrift',sans-serif","'JetBrains Mono','Consolas',monospace"],
+  ["'Chakra Petch','Bahnschrift',sans-serif","'Fira Code','Consolas',monospace"]];
+let fi = 0, si = 0;
+function setFont(i){ fi = i % 3; document.documentElement.style.setProperty("--head", FONTS[fi][0]); document.documentElement.style.setProperty("--mono", FONTS[fi][1]); try{ localStorage.setItem("nc-font", fi); }catch(e){} }
+function setStyle(i){ si = i % 3; document.documentElement.classList.remove("st2", "st3"); if (si) document.documentElement.classList.add("st" + (si + 1)); try{ localStorage.setItem("nc-style", si); }catch(e){} }
+try{ setFont(+localStorage.getItem("nc-font") || 0); setStyle(+localStorage.getItem("nc-style") || 0); }catch(e){}
+
 // ---- системный лог и команды ----
 function sys(msg, bad){
   const d = new Date(), t = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
@@ -463,17 +518,34 @@ function sys(msg, bad){
 }
 function runCmd(v){
   const w = v.toLowerCase().split(/\s+/), c = w[0], a = w[1], n = w.length;
-  if (c === "help" && n === 1){ sys("команды: help · theme [1-4] · eco · sound · boot · links reset · reset · clear"); sys("поиск: yt gh steam ai ddg + запрос"); return true; }
+  if (c === "help" && n === 1){ sys("команды: help · theme · eco · sound · boot · bg · font · style · note · calc · hack · whoami · links reset · reset · clear"); sys("поиск: yt gh steam ai ddg + запрос"); return true; }
   if (c === "theme" && n <= 2){ const k = +a; setTheme(k >= 1 && k <= 4 ? k - 1 : ti + 1); sys("тема " + (ti + 1) + " из " + THEMES.length); return true; }
   if (c === "eco" && n <= 2){ setEco(a === "on" ? true : a === "off" ? false : !eco); sys("эко-режим: " + (eco ? "ВКЛ" : "ВЫКЛ")); return true; }
   if (c === "reset" && n === 1){ document.querySelectorAll("[data-id]").forEach(e => setG(e, e.dataset.f)); saveG(); sys("раскладка сброшена"); return true; }
   if (c === "sound" && n <= 2){ setSnd(a === "on" ? true : a === "off" ? false : !snd); sys("звук: " + (snd ? "ВКЛ" : "ВЫКЛ")); return true; }
   if (c === "boot" && n === 1){ boot(); return true; }
   if (c === "links" && a === "reset"){ links = LINKS.map(l => l.slice()); saveLinks(); renderTiles(); sys("узлы сброшены"); return true; }
+  const pick = (x, max) => { const k = parseInt(x); return k >= 1 && k <= max ? k - 1 : -1; };
+  if (c === "bg" && n <= 2){ const k = parseInt(a); setBg(k >= 0 && k <= 2 ? k : (bm + 1) % 3); sys("фон: " + ["выкл", "частицы", "сетка"][bm]); return true; }
+  if (c === "font" && n <= 2){ const k = pick(a, 3); setFont(k >= 0 ? k : fi + 1); sys("шрифт " + (fi + 1) + " из 3"); return true; }
+  if (c === "style" && n <= 2){ const k = pick(a, 3); setStyle(k >= 0 ? k : si + 1); sys("стиль окон " + (si + 1) + " из 3"); return true; }
+  if (c === "note" && n > 1){ todos.push({t: v.slice(5).trim().slice(0, 200), d: 0}); saveTodo(); renderTodo(); sys("задача добавлена"); return true; }
+  if (c === "calc" && n > 1){
+    const ex = v.slice(5).replace(/,/g, ".");
+    if (!/^[\d+\-*\/().%\s]+$/.test(ex)){ sys("только числа и + - * / ( )", true); return true; }
+    try{ sys(ex.trim() + " = " + Function('"use strict";return (' + ex + ")")()); }catch(e){ sys("ошибка выражения", true); }
+    return true;
+  }
+  if (c === "whoami" && n === 1){ sys("morgan · netrunner · доступ: 9/10"); return true; }
+  if (c === "hack" && n === 1){
+    ["запуск протокола", "обход брандмауэра", "ICE уровня 4 обнаружен", "подбор ключа ...", "ключ подобран", "доступ получен"]
+      .forEach((m, i) => setTimeout(() => sys("[BREACH] " + m, i === 2), i*450));
+    return true;
+  }
   if (c === "clear" && n === 1){ lg.innerHTML = ""; return true; }
   return false;
 }
-const LOGM = ["ICE обнаружен на узле","сканирование порта","пакет перехвачен","туннель установлен","прокси сменён","ключ принят","сигнал потерян","дрон замечен в секторе","шифрование обновлено"];
+const LOGM = ["ICE обнаружен на узле","сканирование порта","пакет перехвачен","туннель установлен","прокси сменён","ключ принят","сигнал потерян","дрон замечен в секторе","шифрование обновлено","прошивка имплантов обновлена","ретранслятор перегружен","обнаружена слежка","кеш узла сброшен","сигнал NetWatch подавлен","дрон Militech вне зоны","токен доступа обновлён","аномалия в секторе 7","резервная копия ядра","шлюз Arasaka недоступен"];
 const lg = $("#log");
 function logLine(){
   const d = new Date(), t = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
@@ -485,6 +557,34 @@ function logLine(){
 }
 for (let i = 0; i < 6; i++) logLine();
 if (!reduce) setInterval(logLine, 1300);
+
+const CMDS = {help:"help", theme:"theme [1-4]", eco:"eco [on/off]", sound:"sound [on/off]", boot:"boot", bg:"bg [0-2]", font:"font [1-3]", style:"style [1-3]",
+  note:"note текст", calc:"calc 2+2", hack:"hack", whoami:"whoami", links:"links reset", reset:"reset", clear:"clear"};
+const cmd = $("#cmd"), hist = []; let hi = 0, sug = "";
+cmd.addEventListener("input", () => {
+  const raw = cmd.value.toLowerCase(), w = raw.split(" ")[0];
+  const k = w && Object.keys(CMDS).find(x => raw.includes(" ") ? x === w : x.startsWith(w));
+  sug = k && !raw.includes(" ") ? k + " " : "";
+  $("#sug").textContent = k ? "→ " + CMDS[k] : "";
+});
+cmd.addEventListener("keydown", e => {
+  if (e.key === "Tab" && sug){ e.preventDefault(); cmd.value = sug; sug = ""; return; }
+  if (e.key === "Escape"){ cmd.blur(); return; }
+  if (e.key === "ArrowUp" && hist.length){ e.preventDefault(); hi = Math.max(0, hi - 1); cmd.value = hist[hi]; return; }
+  if (e.key === "ArrowDown" && hist.length){ e.preventDefault(); hi = Math.min(hist.length, hi + 1); cmd.value = hist[hi] || ""; return; }
+  const v = cmd.value.trim(); if (e.key !== "Enter" || !v) return;
+  hist.push(v); hi = hist.length; sys("> " + v);
+  if (!runCmd(v)) sys("неизвестная команда: " + v + " (help)", true);
+  cmd.value = ""; $("#sug").textContent = "";
+});
+
+// подсказки в поиске
+const hint0 = $("#hint").innerHTML, NAMES = {yt: "YouTube", gh: "GitHub", steam: "Steam", ai: "Claude", ddg: "DuckDuckGo"};
+$("#q").addEventListener("input", e => {
+  const val = e.target.value, w = val.split(" ")[0].toLowerCase(), sp = val.includes(" ");
+  const k = w && Object.keys(NAMES).find(x => sp ? x === w : x.startsWith(w));
+  $("#hint").innerHTML = !k ? hint0 : (sp || w === k ? "→ поиск на <span>" + NAMES[k] + "</span>, Enter" : "→ <span>" + k + "</span> + запрос — " + NAMES[k]);
+});
 
 // ---- тайлинг: границы между окнами тянутся мышкой, двойной клик — сброс ----
 const gv = el => parseFloat(el.dataset.g ?? el.dataset.f);
