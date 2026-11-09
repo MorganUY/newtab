@@ -82,16 +82,40 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #net{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
 .netlbl{position:absolute;left:.9rem;bottom:.6rem;font-size:.75rem;color:var(--dim);pointer-events:none}
 .w-notes .in{display:flex}
-#notes{width:100%;height:100%;resize:none;background:#0a0a0d;color:var(--text);border:1px solid #2a2a2f;font:.9rem/1.5 var(--mono);padding:.6rem;outline:0;caret-color:var(--yellow)}
-#notes:focus{border-color:var(--yellow)}
 
 .w-rain .in,.w-log .in{padding:0}
 #rain{position:absolute;inset:0;width:100%;height:100%}
 #log{position:absolute;inset:.8rem 1.1rem;overflow:hidden;font-size:.78rem;line-height:1.5;color:var(--dim)}
 #log b{color:var(--cyan);font-weight:400}#log em{color:var(--red);font-style:normal}
-#theme{background:none;border:1px solid #000;color:#000;font:inherit;letter-spacing:inherit;padding:0 .5rem;margin-left:.7rem;cursor:pointer}
-#theme:hover{background:#000;color:var(--yellow)}
+#theme,#snd{background:none;border:1px solid #000;color:#000;font:inherit;letter-spacing:inherit;padding:0 .5rem;margin-left:.7rem;cursor:pointer}
+#theme:hover,#snd:hover{background:#000;color:var(--yellow)}
 .eco #clock,.eco .cursor{animation:none}
+#boot{position:fixed;inset:0;z-index:100;background:var(--bg);padding:2.2rem;font-size:1.05rem;line-height:1.8;color:var(--yellow);transition:opacity .45s;cursor:pointer}
+#boot.out{opacity:0;pointer-events:none}
+#boot i{font-style:normal;color:var(--cyan)}#boot b{font-weight:400;color:var(--red)}
+.tile{position:relative}
+.edit .tile{border-color:var(--red)}
+.edit .tile::after{content:"✕";position:absolute;top:.3rem;right:.7rem;color:var(--red)}
+.ltools{margin-top:.5rem;font-size:.8rem}
+.ltools button{background:none;border:0;color:var(--dim);font:inherit;cursor:pointer;margin-right:1rem;padding:0}
+.ltools button:hover{color:var(--yellow)}
+#lform{display:none;gap:.5rem;margin-top:.6rem}
+#lform input{flex:1;min-width:0;background:#0a0a0d;color:var(--text);border:1px solid #2a2a2f;font:.85rem var(--mono);padding:.35rem .5rem;outline:0}
+#lform input:focus{border-color:var(--yellow)}
+#lform button{background:none;border:1px solid var(--yellow);color:var(--yellow);font:700 .85rem var(--head);padding:0 .8rem;cursor:pointer}
+.w-notes .in{flex-direction:column;gap:.6rem}
+#tdin{width:100%;background:#0a0a0d;color:var(--text);border:1px solid #2a2a2f;font:.9rem var(--mono);padding:.45rem .6rem;outline:0}
+#tdin:focus{border-color:var(--yellow)}
+#tdl{list-style:none;padding:0;overflow:auto;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:var(--yellow) #1b1b1f}
+#tdl li{display:flex;gap:.6rem;align-items:baseline;padding:.3rem 0;font-size:.9rem;border-bottom:1px solid #1b1b1f;cursor:pointer}
+#tdl li::before{content:"[ ]";color:var(--yellow)}
+#tdl li.d::before{content:"[x]";color:var(--cyan)}
+#tdl li span{flex:1;overflow-wrap:anywhere}
+#tdl li.d span{color:var(--dim);text-decoration:line-through}
+#tdl li b{color:var(--red);font-weight:400;opacity:.5;padding:0 .3rem}
+#tdl li b:hover{opacity:1}
+#boot{white-space:pre}
+#pb{color:var(--cyan);margin-top:.8rem}
 @media (max-width:900px){
   html{font-size:15px}
   body{height:auto;overflow:auto}
@@ -106,10 +130,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 </style>
 </head>
 <body>
+<div id="boot" style="display:none"></div>
 <main class="desk split v">
   <div class="split h" data-id="top" data-f="1.3">
 <section class="win w-main" data-id="main" data-f="2.2">
-    <div class="bar"><span>NIGHT_CITY // TERMINAL</span><span><span id="netst">СЕТЬ: ONLINE</span><button id="theme" title="Сменить цвет">ТЕМА</button></span></div>
+    <div class="bar"><span>NIGHT_CITY // TERMINAL</span><span><span id="netst">СЕТЬ: ONLINE</span><button id="theme" title="Сменить цвет">ТЕМА</button><button id="snd" title="Звуки">ЗВУК: ВЫКЛ</button></span></div>
     <div class="in">
       <div>
         <div id="clock">00:00:00</div>
@@ -123,7 +148,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
         </label>
         <p class="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>цифры</span> открывают узлы, когда поле пустое. Команды: <span>help</span>.</p>
       </div>
-      <nav class="tiles" id="tiles"></nav>
+      <div>
+        <nav class="tiles" id="tiles"></nav>
+        <div class="ltools"><button id="ladd">+ узел</button><button id="ledit">правка</button></div>
+        <div id="lform"><input id="ln" placeholder="название" spellcheck="false"><input id="lu" placeholder="https://адрес" spellcheck="false"><button id="lok">OK</button></div>
+      </div>
     </div>
   </section>
     <div class="split v" data-id="right" data-f="1">
@@ -156,8 +185,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
     <div class="in"><canvas id="rain"></canvas></div>
   </section>
 <section class="win w-notes" data-id="notes" data-f=".9">
-    <div class="bar"><span>ЗАМЕТКИ</span><span>.txt</span></div>
-    <div class="in"><textarea id="notes" spellcheck="false" placeholder="сюда можно писать что угодно..."></textarea></div>
+    <div class="bar"><span>ЗАДАЧИ</span><span>.todo</span></div>
+    <div class="in"><input id="tdin" placeholder="новая задача + Enter" spellcheck="false" autocomplete="off"><ul id="tdl"></ul></div>
   </section>
   </div>
 </main>
@@ -173,7 +202,30 @@ const LINKS = [ // [название, адрес, подпись] — добав
   ["STEAM","https://store.steampowered.com","./games"],
   ["CLAUDE","https://claude.ai","./netrunner"],
 ];
-$("#tiles").innerHTML = LINKS.slice(0,9).map((l,i) => `<a class="tile${l[0]==="CLAUDE"?" claude":""}" href="${l[1]}" data-k="${i+1}"><small>[${i+1}] ${l[2]}</small><strong>${l[0]}</strong></a>`).join("");
+let editMode = false, links = LINKS.map(l => l.slice());
+try{ const sv = JSON.parse(localStorage.getItem("nc-links")); if (Array.isArray(sv)) links = sv; }catch(e){}
+const saveLinks = () => { try{ localStorage.setItem("nc-links", JSON.stringify(links)); }catch(e){} };
+const h = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+function renderTiles(){
+  $("#tiles").innerHTML = links.slice(0,9).map((l,i) => `<a class="tile${l[0]==="CLAUDE"?" claude":""}" href="${h(l[1])}" data-k="${i+1}"><small>[${i+1}] ${h(l[2])}</small><strong>${h(l[0])}</strong></a>`).join("");
+}
+renderTiles();
+$("#tiles").addEventListener("click", e => {
+  const t = e.target.closest(".tile"); if (!editMode || !t) return;
+  e.preventDefault(); links.splice(+t.dataset.k - 1, 1); saveLinks(); renderTiles();
+});
+$("#ledit").onclick = () => { editMode = !editMode; document.body.classList.toggle("edit", editMode); $("#ledit").textContent = editMode ? "готово" : "правка"; };
+$("#ladd").onclick = () => { const f = $("#lform"); f.style.display = f.style.display === "flex" ? "none" : "flex"; if (f.style.display === "flex") $("#ln").focus(); };
+function addLink(){
+  const n = $("#ln").value.trim().toUpperCase().slice(0,12); let u = $("#lu").value.trim();
+  if (!n || !u || links.length >= 9) return;
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  try{ new URL(u); }catch(e){ return; }
+  links.push([n, u, "./" + n.toLowerCase()]); saveLinks(); renderTiles();
+  $("#ln").value = ""; $("#lu").value = ""; $("#lform").style.display = "none";
+}
+$("#lok").onclick = addLink;
+["#ln","#lu"].forEach(id => $(id).addEventListener("keydown", e => { if (e.key === "Enter") addLink(); }));
 
 const THEMES = [["#fcee0a","#00f0ff","#ff003c","252,238,10"],["#ff2a6d","#05d9e8","#fcee0a","255,42,109"],["#39ff14","#00f0ff","#ff003c","57,255,20"],["#00f0ff","#fcee0a","#ff003c","0,240,255"]];
 let ACC = "252,238,10", ti = 0;
@@ -183,7 +235,7 @@ function setTheme(i){
   try{ localStorage.setItem("nc-theme", ti); }catch(e){}
 }
 try{ setTheme(+localStorage.getItem("nc-theme") || 0); }catch(e){}
-$("#theme").onclick = () => setTheme(ti+1);
+$("#theme").onclick = () => { setTheme(ti+1); blip(800, .06, .04); };
 
 let eco = false, frame = 0, rf = 0;
 try{ eco = localStorage.getItem("nc-eco") === "1"; }catch(e){}
@@ -192,6 +244,27 @@ function setEco(v){ eco = v; document.documentElement.classList.toggle("eco", v)
 addEventListener("online", () => { netState(); sys("связь восстановлена"); });
 addEventListener("offline", () => { netState(); sys("связь потеряна", true); });
 setEco(eco);
+
+let snd = false, ac = null;
+try{ snd = localStorage.getItem("nc-snd") === "1"; }catch(e){}
+function blip(f = 900, d = .04, v = .03){
+  if (!snd) return;
+  try{
+    ac = ac || new AudioContext(); if (ac.state === "suspended") ac.resume();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "square"; o.frequency.value = f; g.gain.value = v;
+    g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + d);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
+  }catch(e){}
+}
+function setSnd(v){ snd = v; try{ localStorage.setItem("nc-snd", v ? "1" : "0"); }catch(e){} $("#snd").textContent = "ЗВУК: " + (v ? "ВКЛ" : "ВЫКЛ"); blip(1200, .08, .04); }
+$("#snd").onclick = () => setSnd(!snd);
+setSnd(snd);
+document.addEventListener("mouseover", e => { const t = e.target.closest(".tile,.gutter,#theme,#snd"); if (t && !t.contains(e.relatedTarget)) blip(1400, .02, .02); });
+document.addEventListener("click", e => { if (e.target.closest(".tile")) blip(500, .08, .04); });
+$("#q").addEventListener("input", () => blip(700 + Math.random()*200, .015, .015));
+["#tdin","#ln","#lu"].forEach(id => $(id).addEventListener("input", () => blip(700 + Math.random()*200, .015, .015)));
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") blip(1100, .06, .04); });
 
 const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
 const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
@@ -230,7 +303,7 @@ $("#q").addEventListener("keydown", e => {
 document.addEventListener("keydown", e => {
   if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
   const t = document.querySelector('.tile[data-k="' + e.key + '"]');
-  if (t) t.click(); else if (e.key.length === 1) $("#q").focus();
+  if (t) { if (!editMode) t.click(); } else if (e.key.length === 1) $("#q").focus();
 });
 $("#q").focus();
 
@@ -245,8 +318,6 @@ function progress(){
 progress(); setInterval(progress, 1000);
 
 
-try{ $("#notes").value = localStorage.getItem("nc-notes") || ""; }catch(e){}
-$("#notes").addEventListener("input", e => { try{ localStorage.setItem("nc-notes", e.target.value); }catch(err){} });
 
 // ---- печатающийся код ----
 const SNIPS = [
@@ -392,10 +463,13 @@ function sys(msg, bad){
 }
 function runCmd(v){
   const w = v.toLowerCase().split(/\s+/), c = w[0], a = w[1], n = w.length;
-  if (c === "help" && n === 1){ sys("команды: help · theme [1-4] · eco [on/off] · reset · clear"); sys("поиск: yt gh steam ai ddg + запрос"); return true; }
+  if (c === "help" && n === 1){ sys("команды: help · theme [1-4] · eco · sound · boot · links reset · reset · clear"); sys("поиск: yt gh steam ai ddg + запрос"); return true; }
   if (c === "theme" && n <= 2){ const k = +a; setTheme(k >= 1 && k <= 4 ? k - 1 : ti + 1); sys("тема " + (ti + 1) + " из " + THEMES.length); return true; }
   if (c === "eco" && n <= 2){ setEco(a === "on" ? true : a === "off" ? false : !eco); sys("эко-режим: " + (eco ? "ВКЛ" : "ВЫКЛ")); return true; }
   if (c === "reset" && n === 1){ document.querySelectorAll("[data-id]").forEach(e => setG(e, e.dataset.f)); saveG(); sys("раскладка сброшена"); return true; }
+  if (c === "sound" && n <= 2){ setSnd(a === "on" ? true : a === "off" ? false : !snd); sys("звук: " + (snd ? "ВКЛ" : "ВЫКЛ")); return true; }
+  if (c === "boot" && n === 1){ boot(); return true; }
+  if (c === "links" && a === "reset"){ links = LINKS.map(l => l.slice()); saveLinks(); renderTiles(); sys("узлы сброшены"); return true; }
   if (c === "clear" && n === 1){ lg.innerHTML = ""; return true; }
   return false;
 }
@@ -435,6 +509,44 @@ document.querySelectorAll(".split").forEach(sp => {
     });
   });
 });
+// ---- задачи ----
+let todos = []; try{ todos = JSON.parse(localStorage.getItem("nc-todo")) || []; }catch(e){}
+const saveTodo = () => { try{ localStorage.setItem("nc-todo", JSON.stringify(todos)); }catch(e){} };
+function renderTodo(){ $("#tdl").innerHTML = todos.map((x,i) => `<li data-i="${i}"${x.d ? ' class="d"' : ""}><span>${h(x.t)}</span><b>✕</b></li>`).join(""); }
+$("#tdl").addEventListener("click", e => {
+  const li = e.target.closest("li"); if (!li) return;
+  const i = +li.dataset.i, del = !!e.target.closest("b");
+  if (del) todos.splice(i, 1); else todos[i].d = todos[i].d ? 0 : 1;
+  saveTodo(); renderTodo(); blip(del ? 400 : 900, .04, .03);
+});
+$("#tdin").addEventListener("keydown", e => {
+  const v = e.target.value.trim(); if (e.key !== "Enter" || !v) return;
+  todos.push({t: v.slice(0,200), d: 0}); e.target.value = ""; saveTodo(); renderTodo(); blip(1100, .05, .03);
+});
+renderTodo();
+// ---- анимация загрузки (не чаще раза в 30 минут; команда boot — показать снова) ----
+const BOOT_GAP = 30*60*1000;
+function boot(){
+  const el = $("#boot");
+  const ok = (n, bad) => (n + " ").padEnd(28, ".") + " " + (bad ? "<b>НЕТ</b>" : "<i>OK</i>");
+  const L = ["NIGHT_CITY OS v2.77", ok("загрузка ядра"), ok("проверка ICE"), ok("модуль времени"), ok("терминал поиска"),
+    ok("узлы связи [" + links.length + "]"), ok("сеть TRACE"), ok("матричный модуль"), ok("системный журнал"),
+    ok("менеджер задач [" + todos.length + "]"), ok("связь", !navigator.onLine), ok("синхронизация"), "добро пожаловать, " + NAME + "."];
+  const bar = k => "[" + "█".repeat(k) + "░".repeat(26 - k) + "] " + Math.round(k/26*100) + "%";
+  el.innerHTML = '<div id="bl"></div><div id="pb"></div>'; el.className = ""; el.style.display = "block";
+  let i = 0, t = null;
+  const end = () => { clearInterval(t); removeEventListener("keydown", end); el.classList.add("out"); setTimeout(() => { el.style.display = "none"; }, 450); };
+  t = setInterval(() => {
+    if (i >= L.length){ clearInterval(t); setTimeout(end, 700); return; }
+    $("#bl").insertAdjacentHTML("beforeend", "<div>" + L[i++] + "</div>");
+    $("#pb").textContent = bar(Math.round(i/L.length*26)); blip(500 + i*60, .03, .02);
+  }, 170);
+  el.onclick = end; addEventListener("keydown", end);
+}
+try{
+  const last = +localStorage.getItem("nc-boot") || 0;
+  if (!reduce && !eco && Date.now() - last > BOOT_GAP){ localStorage.setItem("nc-boot", Date.now()); boot(); }
+}catch(e){}
 try{ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {}); }catch(e){}
 </script>
 </body>
