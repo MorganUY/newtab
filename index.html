@@ -14,30 +14,32 @@
   --head:'Rajdhani','Bahnschrift','Arial Narrow',sans-serif;
 }
 *{box-sizing:border-box;margin:0}
-html{font-size:clamp(15px,.62vw + 7px,26px)}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;padding:1.1rem}
+html{font-size:clamp(13px,min(.62vw + 7px,1.7vh),26px)}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);height:100vh;overflow:hidden;padding:1.1rem}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
 
-.desk{
-  min-height:calc(100vh - 2.2rem);display:grid;gap:1.1rem;
-  grid-template-columns:1.5fr 1fr 1fr;
-  grid-template-rows:auto auto minmax(17rem,1fr);
-  grid-template-areas:"main main prog" "main main timer" "code net notes";
-}
+.desk{height:100%}
+.split{display:flex;min-width:0;min-height:0}
+.split.h{flex-direction:row}.split.v{flex-direction:column}
+.split>*:not(.gutter){flex:1 1 0px;min-width:0;min-height:0}
+.gutter{flex:0 0 1.1rem;position:relative;touch-action:none}
+.split.h>.gutter{cursor:col-resize}.split.v>.gutter{cursor:row-resize}
+.gutter::after{content:"";position:absolute;background:var(--yellow);opacity:0;transition:opacity .15s}
+.split.h>.gutter::after{left:calc(50% - 1px);width:2px;top:15%;bottom:15%}
+.split.v>.gutter::after{top:calc(50% - 1px);height:2px;left:15%;right:15%}
+.gutter:hover::after,.gutter.on::after{opacity:.85}
 .win{
-  background:var(--panel);border:1px solid var(--yellow);min-width:0;min-height:0;
+  position:relative;background:var(--panel);border:1px solid var(--yellow);min-width:0;min-height:0;
   clip-path:polygon(0 0,calc(100% - 1.2rem) 0,100% 1.2rem,100% 100%,1.2rem 100%,0 calc(100% - 1.2rem));
   display:flex;flex-direction:column;
 }
-.bar{display:flex;justify-content:space-between;background:var(--yellow);color:#000;
+.bar{user-select:none;display:flex;justify-content:space-between;background:var(--yellow);color:#000;
   font:700 .85rem var(--head);letter-spacing:.14em;padding:.3rem 1.8rem .3rem .9rem}
 .in{padding:1.1rem 1.3rem 1.3rem;flex:1;min-height:0;position:relative}
-.w-main{grid-area:main}.w-prog{grid-area:prog}.w-timer{grid-area:timer}
-.w-code{grid-area:code}.w-net{grid-area:net}.w-notes{grid-area:notes}
 
 .w-main .in{display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem}
-#clock{font:700 clamp(3.4rem,6vw,8rem)/1 var(--head);color:var(--yellow);letter-spacing:.04em;
+#clock{font:700 clamp(2.6rem,min(6vw,9vh),8rem)/1 var(--head);color:var(--yellow);letter-spacing:.04em;
   text-shadow:2px 0 var(--red),-2px 0 var(--cyan);animation:glitch 7s infinite steps(1)}
 @keyframes glitch{
   0%,92%,100%{transform:none;text-shadow:2px 0 var(--red),-2px 0 var(--cyan)}
@@ -51,12 +53,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 @keyframes blink{50%{opacity:0}}
 
 .term{display:flex;align-items:center;gap:.75rem;border:1px solid var(--dim);border-left:4px solid var(--yellow);background:#0a0a0d;padding:.85rem 1rem;font-size:1.15rem}
-.term:focus-within{border-color:var(--yellow);box-shadow:0 0 18px rgba(252,238,10,.25)}
+.term:focus-within{border-color:var(--yellow);box-shadow:0 0 18px color-mix(in srgb,var(--yellow) 30%,transparent)}
 .prompt{color:var(--yellow);white-space:nowrap}.prompt b{color:var(--cyan);font-weight:400}
 #q{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font:inherit;caret-color:var(--yellow)}
 .hint{color:var(--dim);font-size:.85rem;margin-top:.7rem;line-height:1.5}.hint span{color:var(--cyan)}
 
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.9rem}
 .tile{display:block;text-decoration:none;color:var(--text);border:1px solid var(--dim);padding:.85rem 1rem 1rem;
   clip-path:polygon(0 0,100% 0,100% calc(100% - .85rem),calc(100% - .85rem) 100%,0 100%);
   transition:background .15s,color .15s,border-color .15s}
@@ -71,11 +73,6 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 .row:first-child{margin-top:0}.row b{color:var(--cyan);font-weight:400}
 .track{height:.5rem;background:#1b1b1f;margin-top:.25rem}
 .track i{display:block;height:100%;width:0;background:var(--yellow)}
-.w-timer .in{display:flex;flex-direction:column;justify-content:space-between}
-#pt{font:700 3.6rem/1.1 var(--head);color:var(--text);letter-spacing:.06em}
-.btns{display:flex;gap:.5rem}
-.btn{flex:1;background:none;color:var(--yellow);border:1px solid var(--yellow);font:700 .9rem var(--head);letter-spacing:.1em;padding:.4rem 0;cursor:pointer}
-.btn:hover,.btn:focus-visible{background:var(--yellow);color:#000;outline:0}
 
 .w-code .in{padding:0}
 #code{position:absolute;inset:1.1rem 1.3rem 1.3rem;overflow:hidden;font-size:.85rem;line-height:1.55;white-space:pre-wrap;color:var(--text)}
@@ -88,19 +85,31 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #notes{width:100%;height:100%;resize:none;background:#0a0a0d;color:var(--text);border:1px solid #2a2a2f;font:.9rem/1.5 var(--mono);padding:.6rem;outline:0;caret-color:var(--yellow)}
 #notes:focus{border-color:var(--yellow)}
 
-@media (max-width:1000px){
-  .desk{grid-template-columns:1fr;grid-template-rows:none;grid-template-areas:"main" "prog" "timer" "code" "net" "notes"}
-  .w-code,.w-net,.w-notes{min-height:15rem}
+.w-rain .in,.w-log .in{padding:0}
+#rain{position:absolute;inset:0;width:100%;height:100%}
+#log{position:absolute;inset:.8rem 1.1rem;overflow:hidden;font-size:.78rem;line-height:1.5;color:var(--dim)}
+#log b{color:var(--cyan);font-weight:400}#log em{color:var(--red);font-style:normal}
+#theme{background:none;border:1px solid #000;color:#000;font:inherit;letter-spacing:inherit;padding:0 .5rem;margin-left:.7rem;cursor:pointer}
+#theme:hover{background:#000;color:var(--yellow)}
+.eco #clock,.eco .cursor{animation:none}
+@media (max-width:900px){
+  html{font-size:15px}
+  body{height:auto;overflow:auto}
+  .desk{height:auto}
+  .split{flex-direction:column!important}
+  .split>.gutter{display:none}
+  .split>*:not(.gutter){flex:none!important}
+  .win{min-height:15rem}
   .tiles{grid-template-columns:repeat(2,1fr)}
 }
 @media (prefers-reduced-motion:reduce){#clock,.cursor{animation:none}}
 </style>
 </head>
 <body>
-<main class="desk">
-
-  <section class="win w-main">
-    <div class="bar"><span>NIGHT_CITY // TERMINAL</span><span>СЕТЬ: ONLINE</span></div>
+<main class="desk split v">
+  <div class="split h" data-id="top" data-f="1.3">
+<section class="win w-main" data-id="main" data-f="2.2">
+    <div class="bar"><span>NIGHT_CITY // TERMINAL</span><span><span id="netst">СЕТЬ: ONLINE</span><button id="theme" title="Сменить цвет">ТЕМА</button></span></div>
     <div class="in">
       <div>
         <div id="clock">00:00:00</div>
@@ -112,18 +121,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
           <span class="prompt">morgan@<b>nightcity</b>:~$</span>
           <input id="q" type="text" autocomplete="off" spellcheck="false" autofocus aria-label="Поиск">
         </label>
-        <p class="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>1–4</span> открывают узлы, когда поле пустое.</p>
+        <p class="hint">Enter — поиск в DuckDuckGo. Префиксы: <span>yt</span> <span>gh</span> <span>steam</span> <span>ai</span> + запрос. Клавиши <span>цифры</span> открывают узлы, когда поле пустое. Команды: <span>help</span>.</p>
       </div>
-      <nav class="tiles">
-        <a class="tile" href="https://www.youtube.com" data-k="1"><small>[1] ./video</small><strong>YOUTUBE</strong></a>
-        <a class="tile" href="https://github.com" data-k="2"><small>[2] ./code</small><strong>GITHUB</strong></a>
-        <a class="tile" href="https://store.steampowered.com" data-k="3"><small>[3] ./games</small><strong>STEAM</strong></a>
-        <a class="tile claude" href="https://claude.ai" data-k="4"><small>[4] ./netrunner</small><strong>CLAUDE</strong></a>
-      </nav>
+      <nav class="tiles" id="tiles"></nav>
     </div>
   </section>
-
-  <section class="win w-prog">
+    <div class="split v" data-id="right" data-f="1">
+<section class="win w-prog" data-id="prog" data-f=".45">
     <div class="bar"><span>ПРОГРЕСС</span><span>.sys</span></div>
     <div class="in">
       <div class="row"><span>день</span><b id="p-d"></b></div><div class="track"><i id="b-d"></i></div>
@@ -132,34 +136,30 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
       <div class="row"><span>год</span><b id="p-y"></b></div><div class="track"><i id="b-y"></i></div>
     </div>
   </section>
-
-  <section class="win w-timer">
-    <div class="bar"><span>ТАЙМЕР ФОКУСА</span><span>.exe</span></div>
-    <div class="in">
-      <div id="pt">25:00</div>
-      <div class="btns">
-        <button class="btn" id="pgo">СТАРТ</button>
-        <button class="btn" data-m="25">25</button>
-        <button class="btn" data-m="5">5</button>
-      </div>
-    </div>
+<section class="win w-log" data-id="log" data-f=".55">
+    <div class="bar"><span>SYSLOG</span><span>live</span></div>
+    <div class="in"><div id="log"></div></div>
   </section>
-
-  <section class="win w-code">
+    </div>
+  </div>
+  <div class="split h" data-id="bot" data-f="1">
+<section class="win w-code" data-id="code" data-f="1.1">
     <div class="bar"><span>BREACH.JS</span><span>RUNNING</span></div>
     <div class="in"><div id="code"></div></div>
   </section>
-
-  <section class="win w-net">
+<section class="win w-net" data-id="net" data-f="1">
     <div class="bar"><span>NET // TRACE</span><span>наведи курсор</span></div>
     <div class="in"><canvas id="net"></canvas><div class="netlbl" id="netlbl"></div></div>
   </section>
-
-  <section class="win w-notes">
+<section class="win w-rain" data-id="rain" data-f="1">
+    <div class="bar"><span>MATRIX</span><span>.raw</span></div>
+    <div class="in"><canvas id="rain"></canvas></div>
+  </section>
+<section class="win w-notes" data-id="notes" data-f=".9">
     <div class="bar"><span>ЗАМЕТКИ</span><span>.txt</span></div>
     <div class="in"><textarea id="notes" spellcheck="false" placeholder="сюда можно писать что угодно..."></textarea></div>
   </section>
-
+  </div>
 </main>
 
 <script>
@@ -167,6 +167,32 @@ const NAME = "Morgan";
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2, "0");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const LINKS = [ // [название, адрес, подпись] — добавляйте свои строки, до 9 штук
+  ["YOUTUBE","https://www.youtube.com","./video"],
+  ["GITHUB","https://github.com","./code"],
+  ["STEAM","https://store.steampowered.com","./games"],
+  ["CLAUDE","https://claude.ai","./netrunner"],
+];
+$("#tiles").innerHTML = LINKS.slice(0,9).map((l,i) => `<a class="tile${l[0]==="CLAUDE"?" claude":""}" href="${l[1]}" data-k="${i+1}"><small>[${i+1}] ${l[2]}</small><strong>${l[0]}</strong></a>`).join("");
+
+const THEMES = [["#fcee0a","#00f0ff","#ff003c","252,238,10"],["#ff2a6d","#05d9e8","#fcee0a","255,42,109"],["#39ff14","#00f0ff","#ff003c","57,255,20"],["#00f0ff","#fcee0a","#ff003c","0,240,255"]];
+let ACC = "252,238,10", ti = 0;
+function setTheme(i){
+  ti = i % THEMES.length; const t = THEMES[ti], st = document.documentElement.style;
+  st.setProperty("--yellow", t[0]); st.setProperty("--cyan", t[1]); st.setProperty("--red", t[2]); ACC = t[3];
+  try{ localStorage.setItem("nc-theme", ti); }catch(e){}
+}
+try{ setTheme(+localStorage.getItem("nc-theme") || 0); }catch(e){}
+$("#theme").onclick = () => setTheme(ti+1);
+
+let eco = false, frame = 0, rf = 0;
+try{ eco = localStorage.getItem("nc-eco") === "1"; }catch(e){}
+function netState(){ $("#netst").textContent = "СЕТЬ: " + (navigator.onLine ? "ONLINE" : "OFFLINE") + (eco ? " · ECO" : ""); }
+function setEco(v){ eco = v; document.documentElement.classList.toggle("eco", v); try{ localStorage.setItem("nc-eco", v ? "1" : "0"); }catch(e){} netState(); }
+addEventListener("online", () => { netState(); sys("связь восстановлена"); });
+addEventListener("offline", () => { netState(); sys("связь потеряна", true); });
+setEco(eco);
+
 const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
 const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 
@@ -184,6 +210,7 @@ const engines = {
   gh:    ["https://github.com/search?q=", "https://github.com"],
   steam: ["https://store.steampowered.com/search/?term=", "https://store.steampowered.com"],
   ai:    ["https://claude.ai/new?q=", "https://claude.ai"],
+  ddg:   ["https://duckduckgo.com/?q=", "https://duckduckgo.com"],
 };
 const DDG = "https://duckduckgo.com/?q=";
 const go = url => { location.href = url; };
@@ -192,6 +219,7 @@ $("#q").addEventListener("keydown", e => {
   if (e.key !== "Enter") return;
   const v = e.target.value.trim();
   if (!v) return;
+  if (runCmd(v)){ e.target.value = ""; return; }
   const [first, ...rest] = v.split(/\s+/);
   const eng = engines[first.toLowerCase()];
   if (eng) return go(rest.length ? eng[0] + encodeURIComponent(rest.join(" ")) : eng[1]);
@@ -216,20 +244,6 @@ function progress(){
 }
 progress(); setInterval(progress, 1000);
 
-let left = 25*60, end = 0, timer = null;
-const showT = () => $("#pt").textContent = pad(Math.floor(left/60)) + ":" + pad(left%60);
-function stopT(){ clearInterval(timer); timer = null; $("#pgo").textContent = "СТАРТ"; }
-function beep(){ try{ const c = new AudioContext(), o = c.createOscillator(); o.frequency.value = 880; o.connect(c.destination); o.start(); setTimeout(()=>{o.stop();c.close()}, 450); }catch(e){} }
-$("#pgo").onclick = () => {
-  if(timer) return stopT();
-  if(left <= 0) left = 25*60;
-  end = Date.now() + left*1000; $("#pgo").textContent = "ПАУЗА";
-  timer = setInterval(() => {
-    left = Math.max(0, Math.round((end - Date.now())/1000)); showT();
-    if(left === 0){ stopT(); beep(); document.title = "Время! // Night City"; }
-  }, 250);
-};
-document.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { stopT(); left = b.dataset.m*60; showT(); document.title = "Night City"; });
 
 try{ $("#notes").value = localStorage.getItem("nc-notes") || ""; }catch(e){}
 $("#notes").addEventListener("input", e => { try{ localStorage.setItem("nc-notes", e.target.value); }catch(err){} });
@@ -268,7 +282,21 @@ const target = "arasaka.net";
 const ice = scan(target);
 if (ice.level > 3) return "ABORT";
 inject("quickhack.exe");
-> доступ получен`
+> доступ получен`,
+`// spoof identity
+const id = forge("netrunner");
+session.set("alias", id);
+> личность подменена`,
+`// sandevistan online
+function boost(t) {
+  for (const f of frames) f.skip(t);
+  return "TIME SLOWED";
+}
+> реакция +400%`,
+`// drain eddies
+const acc = trace("kiroshi.bank");
+if (acc.ice === 0) transfer(acc, "me");
+> перевод невозможен`
 ];
 const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const hl = s => esc(s)
@@ -297,16 +325,18 @@ const cv = $("#net"), cx = cv.getContext("2d");
 let W = 0, H = 0, nodes = [];
 const mouse = {x:-999, y:-999};
 function fit(){
-  const r = cv.parentElement.getBoundingClientRect();
-  W = cv.width = Math.max(1, r.width); H = cv.height = Math.max(1, r.height);
-  nodes = Array.from({length: Math.round(W*H/8000)}, () => ({
-    x: Math.random()*W, y: Math.random()*H,
-    vx: reduce ? 0 : (Math.random()-.5)*.6, vy: reduce ? 0 : (Math.random()-.5)*.6 }));
+  const r = cv.parentElement.getBoundingClientRect(), nw = Math.max(1, r.width), nh = Math.max(1, r.height);
+  nodes.forEach(n => { n.x *= nw/(W||nw); n.y *= nh/(H||nh); });
+  W = cv.width = nw; H = cv.height = nh;
+  const want = Math.round(W*H/8000);
+  nodes.length = Math.min(nodes.length, want);
+  while (nodes.length < want) nodes.push({x: Math.random()*W, y: Math.random()*H, vx: reduce ? 0 : (Math.random()-.5)*.6, vy: reduce ? 0 : (Math.random()-.5)*.6});
 }
 new ResizeObserver(fit).observe(cv.parentElement);
 cv.addEventListener("mousemove", e => { const r = cv.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
 cv.addEventListener("mouseleave", () => { mouse.x = mouse.y = -999; });
 function draw(){
+  if (eco && (frame++ % 4)){ requestAnimationFrame(draw); return; }
   cx.clearRect(0, 0, W, H);
   let links = 0;
   for (const n of nodes){
@@ -320,16 +350,92 @@ function draw(){
     const a = nodes[i];
     for (let j = i+1; j < nodes.length; j++){
       const b = nodes[j], d = Math.hypot(a.x-b.x, a.y-b.y);
-      if (d < 100){ cx.strokeStyle = "rgba(252,238,10," + (1-d/100)*.55 + ")"; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke(); links++; }
+      if (d < 100){ cx.strokeStyle = "rgba(" + ACC + "," + (1-d/100)*.55 + ")"; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke(); links++; }
     }
     const dm = Math.hypot(a.x-mouse.x, a.y-mouse.y);
     if (dm < 150){ cx.strokeStyle = "rgba(0,240,255," + (1-dm/150) + ")"; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(mouse.x,mouse.y); cx.stroke(); }
-    cx.fillStyle = "#fcee0a"; cx.fillRect(a.x-1.5, a.y-1.5, 3, 3);
+    cx.fillStyle = "rgb(" + ACC + ")"; cx.fillRect(a.x-1.5, a.y-1.5, 3, 3);
   }
   $("#netlbl").textContent = "узлов: " + nodes.length + "  связей: " + links;
   if (!reduce) requestAnimationFrame(draw);
 }
 fit(); draw();
+
+// ---- матричный дождь ----
+const rc = $("#rain"), rx = rc.getContext("2d"), FS = 14;
+const GL = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ0123456789ABCDEF";
+let RW = 0, RH = 0, cols = [];
+function rfit(){
+  const r = rc.parentElement.getBoundingClientRect();
+  RW = rc.width = Math.max(1, r.width); RH = rc.height = Math.max(1, r.height);
+  cols = Array.from({length: Math.ceil(RW/FS)}, (_, i) => cols[i] ?? Math.random()*RH/FS);
+  rx.fillStyle = "#101014"; rx.fillRect(0, 0, RW, RH);
+}
+new ResizeObserver(rfit).observe(rc.parentElement);
+function rainTick(){
+  if (document.hidden || (eco && (rf++ % 3))) return;
+  rx.fillStyle = "rgba(16,16,20,.12)"; rx.fillRect(0, 0, RW, RH); rx.font = FS + "px monospace";
+  cols.forEach((y, i) => {
+    rx.fillStyle = Math.random() < .03 ? "#fff" : "rgb(" + ACC + ")";
+    rx.fillText(GL[Math.floor(Math.random()*GL.length)], i*FS, y*FS);
+    cols[i] = (y*FS > RH && Math.random() > .975) ? 0 : y + 1;
+  });
+}
+rfit(); if (!reduce) setInterval(rainTick, 70);
+
+// ---- системный лог и команды ----
+function sys(msg, bad){
+  const d = new Date(), t = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  lg.insertAdjacentHTML("beforeend", "<div><b>[" + t + "]</b> " + (bad ? "<em>" : "") + esc(msg) + (bad ? "</em>" : "") + "</div>");
+  while (lg.children.length > 40) lg.firstChild.remove();
+  lg.scrollTop = lg.scrollHeight;
+}
+function runCmd(v){
+  const w = v.toLowerCase().split(/\s+/), c = w[0], a = w[1], n = w.length;
+  if (c === "help" && n === 1){ sys("команды: help · theme [1-4] · eco [on/off] · reset · clear"); sys("поиск: yt gh steam ai ddg + запрос"); return true; }
+  if (c === "theme" && n <= 2){ const k = +a; setTheme(k >= 1 && k <= 4 ? k - 1 : ti + 1); sys("тема " + (ti + 1) + " из " + THEMES.length); return true; }
+  if (c === "eco" && n <= 2){ setEco(a === "on" ? true : a === "off" ? false : !eco); sys("эко-режим: " + (eco ? "ВКЛ" : "ВЫКЛ")); return true; }
+  if (c === "reset" && n === 1){ document.querySelectorAll("[data-id]").forEach(e => setG(e, e.dataset.f)); saveG(); sys("раскладка сброшена"); return true; }
+  if (c === "clear" && n === 1){ lg.innerHTML = ""; return true; }
+  return false;
+}
+const LOGM = ["ICE обнаружен на узле","сканирование порта","пакет перехвачен","туннель установлен","прокси сменён","ключ принят","сигнал потерян","дрон замечен в секторе","шифрование обновлено"];
+const lg = $("#log");
+function logLine(){
+  const d = new Date(), t = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  const hex = Math.floor(Math.random()*65535).toString(16).toUpperCase().padStart(4, "0");
+  const m = LOGM[Math.floor(Math.random()*LOGM.length)];
+  lg.insertAdjacentHTML("beforeend", "<div><b>[" + t + "]</b> " + (Math.random() < .18 ? "<em>ВНИМАНИЕ</em> " : "") + m + " 0x" + hex + "</div>");
+  while (lg.children.length > 40) lg.firstChild.remove();
+  lg.scrollTop = lg.scrollHeight;
+}
+for (let i = 0; i < 6; i++) logLine();
+if (!reduce) setInterval(logLine, 1300);
+
+// ---- тайлинг: границы между окнами тянутся мышкой, двойной клик — сброс ----
+const gv = el => parseFloat(el.dataset.g ?? el.dataset.f);
+const setG = (el, v) => { el.dataset.g = v; el.style.flex = v + " 1 0px"; };
+let saved = {}; try{ saved = JSON.parse(localStorage.getItem("nc-layout")) || {}; }catch(e){}
+const saveG = () => { const o = {}; document.querySelectorAll("[data-id]").forEach(e => o[e.dataset.id] = gv(e)); try{ localStorage.setItem("nc-layout", JSON.stringify(o)); }catch(e){} };
+document.querySelectorAll("[data-id]").forEach(e => setG(e, saved[e.dataset.id] ?? e.dataset.f));
+document.querySelectorAll(".split").forEach(sp => {
+  const horiz = sp.classList.contains("h"), kids = [...sp.children];
+  kids.slice(0, -1).forEach((a, i) => {
+    const b = kids[i+1], g = document.createElement("div");
+    g.className = "gutter"; g.title = "Тяните, чтобы изменить размер. Двойной клик — сброс.";
+    sp.insertBefore(g, b);
+    g.addEventListener("dblclick", () => { setG(a, a.dataset.f); setG(b, b.dataset.f); saveG(); });
+    g.addEventListener("pointerdown", e => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add("on");
+      const pr = horiz ? "offsetWidth" : "offsetHeight", pt = horiz ? "clientX" : "clientY";
+      const sa = a[pr], tot = sa + b[pr], gt = gv(a) + gv(b), st = e[pt];
+      const mv = ev => { const na = Math.max(90, Math.min(tot - 90, sa + ev[pt] - st)); setG(a, gt*na/tot); setG(b, gt*(tot-na)/tot); };
+      const up = () => { g.classList.remove("on"); g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); saveG(); };
+      g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up);
+    });
+  });
+});
+try{ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {}); }catch(e){}
 </script>
 </body>
 </html>
